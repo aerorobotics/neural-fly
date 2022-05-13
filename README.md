@@ -46,10 +46,12 @@ This will load all of the experiment data as a list of dictionaries. The `i`'th 
 
 ## Videos
 Check out our overview video:
-[![Full overview video](https://www.youtube.com/watch?v=iCFcU3i2xIM/default.jpg)](https://www.youtube.com/watch?v=iCFcU3i2xIM "Neural-Fly Enables Rapid Learning for Agile Flight in Strong Winds")
 
-60 second overview video created by Caltech's Office of Strategic Communications
-[![60 second overview video](https://www.youtube.com/watch?v=y3Z5ZJK6FDg/default.jpg)](https://www.youtube.com/watch?v=y3Z5ZJK6FDg "Neural-Fly Enables Rapid Learning for Agile Flight in Strong Winds")
+[![Full overview video](https://img.youtube.com/vi/iCFcU3i2xIM/mqdefault.jpg)](https://www.youtube.com/watch?v=iCFcU3i2xIM "Neural-Fly Enables Rapid Learning for Agile Flight in Strong Winds")
+
+60 second overview video created by Caltech's Office of Strategic Communications:
+
+[![60 second overview video](https://img.youtube.com/vi/y3Z5ZJK6FDg/mqdefault.jpg)](https://www.youtube.com/watch?v=y3Z5ZJK6FDg "Neural-Fly Enables Rapid Learning for Agile Flight in Strong Winds")
 
 ## Citation
 The data and code here are for personal and educational use only and provided without warantee; written permission from the authors is required for further use. Please cite our work as follows.
