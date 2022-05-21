@@ -1,5 +1,5 @@
-import os
-from typing import List
+import os, re
+from typing import List, Dict
 from ast import literal_eval
 from collections import namedtuple
 
@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 folder = './data/experiment'
+filename_fields = ['vehicle', 'trajectory', 'method', 'condition']
 
 def save_data(Data : List[dict], folder : str, fields=['t', 'p', 'p_d', 'v', 'v_d', 'q', 'R', 'w', 'T_sp', 'q_sp', 'hover_throttle', 'fa', 'pwm']):
     ''' Save {Data} to individual csv files in {folder}, serializing (2+)d ndarrays as lists '''
@@ -20,18 +21,33 @@ def save_data(Data : List[dict], folder : str, fields=['t', 'p', 'p_d', 'v', 'v_
 
         df = pd.DataFrame()
 
+        missing_fields = []
         for field in fields:
-            df[field] = data[field].tolist()
-        df.to_csv(f"{folder}/{data['method']}_{data['condition']}.csv")
+            try:
+                df[field] = data[field].tolist()
+            except KeyError as err:
+                missing_fields.append(field)
+        if len(missing_fields) > 0:
+            print('missing fields ', ', '.join(missing_fields))
 
-def load_data(folder : str, expnames : List[str] = None) -> List[dict]:
+        filename = '_'.join(data[field] for field in filename_fields)
+        df.to_csv(f"{folder}/{filename}.csv")
+
+def load_data(folder : str, expnames = None) -> List[dict]:
     ''' Loads csv files from {folder} and return as list of dictionaries of ndarrays '''
     Data = []
 
     if expnames is None:
         filenames = os.listdir(folder)
-    else:
+    elif isinstance(expnames, str): # if expnames is a string treat it as a regex expression
+        filenames = []
+        for filename in os.listdir(folder):
+            if re.search(expnames, filename) is not None:
+                filenames.append(filename)
+    elif isinstance(expnames, list):
         filenames = (expname + '.csv' for expname in expnames)
+    else:
+        raise NotImplementedError()
     for filename in filenames:
         # Ingore not csv files, assume csv files are in the right format
         if not filename.endswith('.csv'):
@@ -52,8 +68,10 @@ def load_data(folder : str, expnames : List[str] = None) -> List[dict]:
 
         # Add in some metadata from the filename
         namesplit = filename.split('.')[0].split('_')
-        Data[-1]['method'] = namesplit[0]
-        Data[-1]['condition'] = namesplit[1]
+        for i, field in enumerate(filename_fields):
+            Data[-1][field] = namesplit[i]
+        # Data[-1]['method'] = namesplit[0]
+        # Data[-1]['condition'] = namesplit[1]
 
     return Data
 
@@ -61,14 +79,21 @@ def load_data(folder : str, expnames : List[str] = None) -> List[dict]:
 SubDataset = namedtuple('SubDataset', 'X Y C meta')
 feature_len = {}
 
-def format_data(RawData, features: 'list[str]' = ['v', 'q', 'pwm'], output: str = 'fa'):
+def format_data(RawData: List[Dict['str', np.ndarray]], features: 'list[str]' = ['v', 'q', 'pwm'], output: str = 'fa', hover_pwm_ratio = 1.):
+    ''' Returns a list of SubDataset's collated from RawData.
+
+        RawData: list of dictionaries with keys of type str. For keys corresponding to data fields, the value should be type np.ndarray. 
+        features: fields to collate into the SubDataset.X element
+        output: field to copy into the SubDataset.Y element
+        hover_pwm_ratio: (average pwm at hover for testing data drone) / (average pwm at hover for training data drone)
+         '''
     Data = []
     for i, data in enumerate(RawData):
         # Create input array
         X = []
         for feature in features:
             if feature == 'pwm':
-                X.append(data[feature] / 1000)
+                X.append(data[feature] / 1000 * hover_pwm_ratio)
             else:
                 X.append(data[feature])
             feature_len[feature] = len(data[feature][0])
